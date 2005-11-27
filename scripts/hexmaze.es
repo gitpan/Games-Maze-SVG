@@ -1,0 +1,142 @@
+/**
+ * File: hexmaze.es
+ *
+ * Provide interactive effects for a hexagonal maze.
+ * Depends on maze.es for support.
+ */
+
+function move_sprite(evt)
+{
+    switch(evt.keyCode)
+    {
+	case 16:
+            shifted = true;
+	    return;
+	case 40: // down
+	   while(sprite.move_down() && shifted)
+	       ;
+	   break;
+	case 38: // up
+	   while(sprite.move_up() && shifted)
+	       ;
+	   break;
+	case 37: // left
+	   while(move_left() && shifted)
+	       ;
+	   break;
+	case 39: // right
+	   while(move_right() && shifted)
+	       ;
+	   break;
+	default:
+	   return;
+    }
+
+    sprite.show();
+    if(game.isFinished( sprite.curr ))
+    {
+        setTimeout( "finished_msg()", 10 );
+    }
+}
+
+function move_left()
+{
+    return (sprite.move_left()||sprite.move_upleft()||sprite.move_dnleft());
+}
+
+function move_right()
+{
+    return (sprite.move_right()||sprite.move_upright()||sprite.move_dnright());
+}
+
+
+/* Override for a hex maze */
+MazeGame.prototype.isFinished = function( pt )
+{
+    return (pt.x == this.end.x || pt.x+1 == this.end.x) && pt.y == this.end.y;
+}
+
+MazeGame.prototype.down_blocked = function( pt )
+{
+    return pt.y+1 == this.board.length
+        || this.board[pt.y][pt.x]
+        || this.board[pt.y+1][pt.x] > 0;
+}
+
+/* Add some methods for the hex maze */
+MazeGame.prototype.downright_blocked = function( pt )
+{
+    return pt.y+1 == this.board.length
+        || pt.x+1 == this.board[pt.y+1].length
+        || this.board[pt.y][pt.x]
+        || this.board[pt.y][pt.x+1] == -1
+        || this.board[pt.y+1][pt.x+1] > 0;
+}
+
+MazeGame.prototype.downleft_blocked = function( pt )
+{
+    return pt.x < 0 || pt.y+1 == this.board.length
+        || this.board[pt.y+1][pt.x-1] > 0
+        || this.board[pt.y][pt.x]
+        || this.board[pt.y][pt.x-1] == -1;
+}
+
+MazeGame.prototype.upright_blocked = function( pt )
+{
+    return pt.y < 0 || pt.x+1 == this.board[pt.y-1].length
+    || this.board[pt.y-1][pt.x+1]
+    || (this.board[pt.y][pt.x+1] && this.board[pt.y-1][pt.x]);
+}
+
+MazeGame.prototype.upleft_blocked = function( pt )
+{
+    return pt.x < 0 || pt.y < 0 || this.board[pt.y-1][pt.x-1]
+     || (this.board[pt.y][pt.x-1] && this.board[pt.y-1][pt.x]);
+}
+
+
+/* Overrides for a sprite in a hex maze */
+
+Sprite.prototype.move_dnleft = function()
+{
+    if(this.game.downleft_blocked( this.curr ))
+    {
+        return false;
+    }
+    this.curr.x--;
+    this.curr.y++;
+    return true;
+}
+
+Sprite.prototype.move_upleft = function()
+{
+    if(this.game.upleft_blocked( this.curr ))
+    {
+        return false;
+    }
+    this.curr.x--;
+    this.curr.y--;
+    return true;
+}
+
+Sprite.prototype.move_dnright = function()
+{
+    if(this.game.downright_blocked( this.curr ))
+    {
+        return false;
+    }
+    this.curr.x++;
+    this.curr.y++;
+    return true;
+}
+
+Sprite.prototype.move_upright = function()
+{
+    if(this.game.upright_blocked( this.curr ))
+    {
+        return false;
+    }
+    this.curr.x++;
+    this.curr.y--;
+    return true;
+}
