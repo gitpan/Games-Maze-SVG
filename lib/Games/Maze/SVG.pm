@@ -17,11 +17,11 @@ Games::Maze::SVG - Build mazes in SVG.
 
 =head1 VERSION
 
-Version 0.6
+Version 0.7
 
 =cut
 
-our $VERSION = 0.6;
+our $VERSION = 0.7;
 
 =head1 SYNOPSIS
 
@@ -158,6 +158,8 @@ sub  new
     return Games::Maze::SVG::Rect->new( @_ )    if 'Rect' eq $shape;
     return Games::Maze::SVG::RectHex->new( @_ ) if 'RectHex' eq $shape;
     return Games::Maze::SVG::Hex->new( @_ )     if 'Hex' eq $shape;
+
+    croak "Unrecognized maze shape '$shape'.\n";
 }
 
 
@@ -546,6 +548,7 @@ EOB
 }
 
 
+=begin COMMENT
 
 # _create_thumbnail
 #
@@ -570,6 +573,7 @@ sub _create_thumbnail
     qq{      <rect x="$x" y="$y" width="$wid" height="$ht" class="mazebg"/>\n};
 }
 
+=cut
 
 # _create_text_button
 #
@@ -671,7 +675,7 @@ sub  _just_maze
         my $x = 0;
         foreach my $c (@{$r})
         {
-            $output .= qq{    <use x="$x" y="$y" xlink:href="#$c"/>\n} if $c;
+            $output .= qq{    <use x="$x" y="$y" xlink:href="#$c"/>\n} if $c and $c ne '$';
             $x += $dx;
         }
         $y += $dy;

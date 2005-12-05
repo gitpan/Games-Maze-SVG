@@ -15,11 +15,11 @@ Games::Maze::SVG::Rect - Build rectangular mazes in SVG.
 
 =head1 VERSION
 
-Version 0.4
+Version 0.7
 
 =cut
 
-our $VERSION = 0.4;
+our $VERSION = 0.7;
 
 =head1 SYNOPSIS
 
@@ -118,7 +118,7 @@ sub  new
     if(!exists $Walls{$obj->{wallform}})
     {
         my $forms = join( ", ", sort keys %Walls );
-        croak "\n'$Walls{wallform}' is not a valid wall form.\nTry one of: $forms\n\n";
+        croak "\n'$obj->{wallform}' is not a valid wall form.\nTry one of: $forms\n\n";
     }
 
     $obj->{mazeparms}->{cell} = 'Quad';

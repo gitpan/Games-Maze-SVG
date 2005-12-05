@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>SVG Maze Builder</title>
+  <style type="text/css">
+    body {
+	   margin:0px;
+	   padding:0px;
+	   font-family:arial, helvetica, sans-serif;
+	   background-color:white;
+	 }
+    th { text-align:left; }
+  </style>
+</head>
+<body>
+<h1>SVG Maze Builder</h1>
+
+<p>Build a playable SVG-based maze of various styles and sizes.</p>
+
+<form method="GET" action="/cgi-bin/svgmaze.pl">
+<table border="0" cellspacing="4">
+<tr>
+  <td valign="top">
+    <table border="0">
+      <tr>
+	<th>Dimensions:</th>
+	<td><input type="text" name="width" value="29" maxlength="2" size="2" />
+	  x <input type="text" name="height" value="19" maxlength="2" size="2" />
+	</td>
+      </tr>
+      <tr>
+	<th>Entrance column:</th>
+	<td><input type="text" name="enter" value="" maxlength="2" size="2" />
+	    (default is random)
+	</td>
+      </tr>
+      <tr>
+	<th>Exit column:</th>
+	<td><input type="text" name="exit" value="" maxlength="2" size="2" />
+	    (default is random)
+	</td>
+      </tr>
+    </table>
+  </td>
+  <td valign="top">
+    <table border="0">
+      <tr>
+	<th>Style:</th>
+	<td><select name="style">
+	    <option value="rect:straight">rectangular</option>
+	    <option value="rect:round">rounded rectangular</option>
+	    <option value="rect:roundcorners">rectangular, rounded corners only</option>
+	    <option value="rect:bevel" selected="selected">beveled rectangular</option>
+	    <option value="hex:straight">hexagonal cells</option>
+	    <option value="Hex:straight">hexagonal maze</option>
+	  </select>
+	</td>
+      </tr>
+      <tr>
+	<th>Breadcrumbs:</th>
+	<td><select name="crumb">
+	    <option value="dash" selected="selected">dashed line</option>
+	    <option value="dot">dotted line</option>
+	    <option value="line">solid line</option>
+	    <option value="none">none</option>
+	  </select>
+	</td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td>
+    <input type="hidden" name="ext" value=".svg" /><input type="submit" />
+  </td>
+</tr>
+</table>
+</form>
+
+</body>
+</html>
