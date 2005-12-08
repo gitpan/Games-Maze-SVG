@@ -15,11 +15,11 @@ Games::Maze::SVG::Rect - Build rectangular mazes in SVG.
 
 =head1 VERSION
 
-Version 0.7
+Version 0.71
 
 =cut
 
-our $VERSION = 0.7;
+our $VERSION = 0.71;
 
 =head1 SYNOPSIS
 
@@ -322,9 +322,13 @@ sub wall_definitions
 
 sub _get_wall_forms
 {
- local $/ = "\n===\n";
- chomp( my @list = <DATA> );
- @list;
+    local $/ = "\n===\n";
+    chomp( my @list = <DATA> );
+
+    $/ = "\n";
+    chomp( @list );
+
+    @list;
 }
 
 
