@@ -17,11 +17,11 @@ Games::Maze::SVG - Build mazes in SVG.
 
 =head1 VERSION
 
-Version 0.71
+Version 0.73
 
 =cut
 
-our $VERSION = 0.71;
+our $VERSION = 0.73;
 
 =head1 SYNOPSIS
 
@@ -39,6 +39,7 @@ See Games::Maze::SVG::Manual for more information on using the module.
 use constant SIGN_HEIGHT => 20;
 use constant SIDE_MARGIN => 10;
 use constant PANEL_WIDTH => 250;
+use constant PANEL_MIN_HEIGHT => 365;
 
 my %crumbstyles = (
                    dash => "stroke-width:1px; stroke-dasharray:5px,3px;",
@@ -50,7 +51,7 @@ my %crumbstyles = (
 my $license = <<'EOL';
   <metadata>
     <!--
-        Copyright 2004-2005, G. Wade Johnson
+        Copyright 2004-2006, G. Wade Johnson
 	Some rights reserved.
     -->
     <rdf:RDF xmlns="http://web.resource.org/cc/"
@@ -58,7 +59,7 @@ my $license = <<'EOL';
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
     <Work rdf:about="">
        <dc:title>SVG Maze</dc:title>
-       <dc:date>2005</dc:date>
+       <dc:date>2006</dc:date>
        <dc:description>An SVG-based Game</dc:description>
        <dc:creator><Agent>
 	  <dc:title>G. Wade Johnson</dc:title>
@@ -103,7 +104,7 @@ Takes one positional parameter that is the maze type: Rect, RectHex, or Hex
 =item wallform
 
 String naming the wall format. Legal values are bevel, round, roundcorners,
-and straight.
+and straight. Not all formats work with all maze shapes.
 
 =item crumb
 
@@ -287,7 +288,7 @@ sub  toString
 
     my $crumb  = '';
     my $color  = {
-                  mazebg => '#ffc', # '#9cc'; # '#fc0'
+                  mazebg => '#ffc',
                   panel  => '#ccc',
                   crumb  => '#f3f',
                   sprite => 'orange',
@@ -306,7 +307,6 @@ sub  toString
 
     my $width = $self->{width} + 2 * SIDE_MARGIN;
     my $height = $self->{height} + 2 * SIGN_HEIGHT;
-    my ($cx,$cy) = ($self->{width}/2, (35+$self->{height}/2));
     my $sprite_def = $self->create_sprite();
 
     my $output = qq{<?xml version="1.0"?>\n} ;
@@ -315,21 +315,28 @@ sub  toString
     my ($xme, $yme) = ($xp*$self->dx(), $yp*$self->dy());
     my ($xcrumb, $ycrumb) = ($xme+$self->dx()/2, $yme+$self->dy()/2);
 
+    my $panelheight = $height > PANEL_MIN_HEIGHT ? $height : PANEL_MIN_HEIGHT;
     if($self->{interactive})
     {
-        my $script = $self->build_all_script( \@rows );
+        my $script = $self->build_all_script();
+	my $boardelem = $self->build_board_element(
+	    \@rows, $xp, $yp, $xe, $ye
+	);
 
         my $totalwidth = $width + PANEL_WIDTH;
         $output .= <<"EOH";
-<svg width="$totalwidth" height="$height"
+<svg width="$totalwidth" height="$panelheight"
      xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     onload="initialize( board, {x:$xp, y:$yp}, {x:$xe, y:$ye}, {x:@{[$self->dx()]}, y:@{[$self->dy()]}} )"
-     onkeydown="move_sprite(evt)" onkeyup="unshift(evt)">
+     xmlns:maze="http://www.anomaly.org/2005/maze"
+     onload="initialize()">
+  <title>A Playable SVG Maze</title>
+  <desc>This maze was generated using the Games::Maze::SVG Perl
+    module.</desc>
 $license
   <defs>
      <style type="text/css">
-	text { font-family: sans-serif; }
+	text { font-family: sans-serif; font-size: 10px; }
 	.panel  { fill:$color->{panel}; stroke:none; }
 	.button {
                    cursor: pointer;
@@ -339,6 +346,8 @@ $license
 	.button text { text-anchor:middle; fill:#fff; font-weight:bold; }
 	.button polygon { fill:white; stroke:none; }
 	.ctrllabel { text-anchor:middle; font-weight:bold; }
+	#solvedmsg { text-anchor:middle; pointer-events:none; font-size:80px; fill:red;
+                   }
      </style>
      <filter id="bevel">
        <feFlood flood-color="#ccf" result="lite-flood"/>
@@ -356,6 +365,7 @@ $license
         </feMerge>
      </filter>
 $script
+$boardelem
   </defs>
   <svg x="@{[ PANEL_WIDTH ]}" y="0" width="$width" height="$height"
        viewBox="$offsetx $offsety $width $height" id="maze">
@@ -363,10 +373,15 @@ EOH
     }
     else
     {
+	$color->{mazebg} = '#fff';
+
         $output .= <<"EOH";
 <svg width="$width" height="$height"
      xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>An SVG Maze</title>
+  <desc>This maze was generated using the Games::Maze::SVG Perl
+    module.</desc>
 $license
   <svg x="0" y="0" width="$width" height="$height"
        viewBox="$offsetx $offsety $width $height" id="maze">
@@ -381,12 +396,10 @@ EOH
 	#sprite { stroke: grey; stroke-width:0.2px; fill: $color->{sprite}; }
 	.crumbs { fill:none; $crumbstyle }
 	.mazebg { fill:$color->{mazebg}; stroke:none; }
-	text { font-family: sans-serif; }
+	text { font-family: sans-serif; font-size: 10px; }
 	.sign text {  fill:#fff;text-anchor:middle; font-weight:bold; }
 	.exit rect {  fill:red; stroke:none; }
 	.entry rect {  fill:green; stroke:none; }
-	#solvedmsg { text-anchor:middle; pointer-events:none; font-size:80px; fill:red;
-                   }
       </style>
       <circle id="savemark" r="3" fill="#6f6" stroke="none"/>
 $sprite_def
@@ -406,21 +419,106 @@ $self->{mazeout}
       <rect x="-16" y="-8" width="32" height="16" rx="3" ry="3"/>
       <text x="0" y="4">Exit</text>
     </g>
-    <text id="solvedmsg" x="$cx" y="$cy" opacity="0">Solved!</text>
   </svg>
 EOH
 
     if($self->{interactive})
     {
-        $output .= $self->build_control_panel( 0, $height );
+        my ($cx,$cy) = (($self->{width}+PANEL_WIDTH)/2, (35+$panelheight/2));
+        $output .= $self->build_control_panel( 0, $panelheight );
+	$output .= <<"EOM";
+  <text id="solvedmsg" x="$cx" y="$cy" visibility="hidden">Solved!</text>
+EOM
     }
     $output . "</svg>\n";
+}
+
+
+=item make_board_array
+
+Build a two-dimensional array of integers that maps the board from
+the two dimensional matrix of wall descriptions.
+
+=cut
+
+sub make_board_array
+{
+    my $self = shift;
+    my $rows = shift;
+    my @board = ();
+
+    foreach my $row (@{$rows})
+    {
+        push @board, [ map { $_ ? 1 : 0 } @{$row} ];
+    }
+    
+    \@board;
+}
+
+
+=item get_script_list
+
+Returns a list of script URLs that will be needed by the interactive
+maze.
+
+=cut
+
+sub get_script_list
+{
+    my $self = shift;
+    my @scripts = (
+        "$self->{dir}point.es",
+        "$self->{dir}sprite.es",
+	"$self->{dir}maze.es",
+	$self->get_script(),
+    );
+
+    @scripts;
 }
 
 
 =item build_all_script
 
 Generate the full set of script sections for the maze.
+
+=cut
+
+sub build_all_script
+{
+    my $self = shift;
+
+    my $script = "";
+    
+    foreach my $url ($self->get_script_list())
+    {
+        $script .= qq{    <script type="text/ecmascript" xlink:href="$url"/>\n};
+    }
+
+    $script .= <<"EOS";
+    <script type="text/ecmascript">
+      function push( evt )
+      {
+          var btn = evt.currentTarget;
+          btn.setAttributeNS( null, "opacity", "0.5" );
+      }
+      function release( evt )
+      {
+          var btn = evt.currentTarget;
+          var opval = btn.getAttributeNS( null, "opacity" );
+          if("" != opval &amp;&amp; 1.0 != opval)
+              btn.setAttributeNS( null, "opacity", '1.0' );
+      }
+    </script>
+EOS
+
+   $script;
+}
+
+
+
+=item build_board_element
+
+Create the element that describes the board.
 
 =over 4
 
@@ -430,45 +528,27 @@ Generate the full set of script sections for the maze.
 
 =cut
 
-sub build_all_script
+sub build_board_element
 {
     my $self = shift;
     my $rows = shift;
-    
-    my $script = qq{    <script type="text/ecmascript" xlink:href="$self->{dir}sprite.es"/>\n};
-    $script  .= qq{    <script type="text/ecmascript" xlink:href="$self->{dir}maze.es"/>\n};
-    $script  .= qq{    <script type="text/ecmascript" xlink:href="@{[$self->get_script()]}"/>\n};
+    my ($xp, $yp, $xe, $ye) = @_;
 
+    my $tilex = $self->dx();
+    my $tiley = $self->dy();
+    
     my $board = $self->make_board_array( $rows );
 
-    $script .= qq{    <script type="text/ecmascript">\n}
-              .qq{      var board = new Array();\n};
-    my $i = 0;
+    my $elem .= qq{    <maze:board start="$xp,$yp" end="$xe,$ye" tile="$tilex,$tiley">\n};
     foreach my $row (@{$board})
     {
-	$script .= qq{      board[$i] = new Array(}
-                   . join( ', ', @{$row} )
-	           . qq{ );\n};
-	$i++;
+	$elem .= qq{      } . join( '', @{$row} ) ."\n";
     }
-    $script .= <<'EOS';
-    </script>
-    <script type="text/ecmascript">
-      function push( evt )
-       {
-        var btn = evt.getCurrentTarget();
-	btn.setAttributeNS( null, "opacity", "0.5" );
-       }
-      function release( evt )
-       {
-        var btn = evt.getCurrentTarget();
-	if("" != btn.getAttributeNS( null, "opacity" ))
-           btn.removeAttributeNS( null, "opacity" );
-       }
-    </script>
+    $elem .= <<'EOS';
+    </maze:board>
 EOS
 
-   $script;
+   $elem;
 }
 
 
@@ -510,7 +590,7 @@ EOB
     <g transform="translate(20,65)">
       <rect x="-2" y="-2" rx="25" ry="25" width="68" height="68"
           fill="none" stroke-width="0.5" stroke="black"/>
-      <text x="34" y="-5" class="ctrllabel">Move Maze</text>
+      <text x="34" y="-5" class="ctrllabel">Move View</text>
 EOB
     $output .= _create_view_button( 'maze_up',    22,  0, '10,5 5,15 15,15' );
     $output .= _create_view_button( 'maze_left',   0, 22, '5,10 15,5 15,15' );
@@ -539,7 +619,7 @@ EOB
       <text x="0" y="70">The mouse must remain over the</text>
       <text x="0" y="90">maze for the keys to work.</text>
       <text x="0" y="120">Use arrow buttons to shift the maze</text>
-      <text x="0" y="140">Center button restores position</text>
+      <text x="0" y="140">Center button centers view on sprite</text>
       <text x="0" y="160">Save button saves current position</text>
       <text x="0" y="180">Back button restores last position</text>
     </g>
@@ -738,7 +818,7 @@ mazes.
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2004-2005 G. Wade Johnson, all rights reserved.
+Copyright 2004-2006 G. Wade Johnson, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

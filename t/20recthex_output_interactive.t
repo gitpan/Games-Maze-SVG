@@ -47,14 +47,17 @@ is_string( $maze->toString(), $output, "Full transform works." );
 
 __DATA__
 <?xml version="1.0"?>
-<svg width="380" height="210"
+<svg width="380" height="365"
      xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     onload="initialize( board, {x:11, y:-4}, {x:11, y:22}, {x:10, y:10} )"
-     onkeydown="move_sprite(evt)" onkeyup="unshift(evt)">
+     xmlns:maze="http://www.anomaly.org/2005/maze"
+     onload="initialize()">
+  <title>A Playable SVG Maze</title>
+  <desc>This maze was generated using the Games::Maze::SVG Perl
+    module.</desc>
   <metadata>
     <!--
-        Copyright 2004-2005, G. Wade Johnson
+        Copyright 2004-2006, G. Wade Johnson
 	Some rights reserved.
     -->
     <rdf:RDF xmlns="http://web.resource.org/cc/"
@@ -62,7 +65,7 @@ __DATA__
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
     <Work rdf:about="">
        <dc:title>SVG Maze</dc:title>
-       <dc:date>2005</dc:date>
+       <dc:date>2006</dc:date>
        <dc:description>An SVG-based Game</dc:description>
        <dc:creator><Agent>
 	  <dc:title>G. Wade Johnson</dc:title>
@@ -88,7 +91,7 @@ __DATA__
 
   <defs>
      <style type="text/css">
-	text { font-family: sans-serif; }
+	text { font-family: sans-serif; font-size: 10px; }
 	.panel  { fill:#ccc; stroke:none; }
 	.button {
                    cursor: pointer;
@@ -98,6 +101,8 @@ __DATA__
 	.button text { text-anchor:middle; fill:#fff; font-weight:bold; }
 	.button polygon { fill:white; stroke:none; }
 	.ctrllabel { text-anchor:middle; font-weight:bold; }
+	#solvedmsg { text-anchor:middle; pointer-events:none; font-size:80px; fill:red;
+                   }
      </style>
      <filter id="bevel">
        <feFlood flood-color="#ccf" result="lite-flood"/>
@@ -114,42 +119,44 @@ __DATA__
          <feMergeNode in="SourceGraphic"/>
         </feMerge>
      </filter>
+    <script type="text/ecmascript" xlink:href="scripts/point.es"/>
     <script type="text/ecmascript" xlink:href="scripts/sprite.es"/>
     <script type="text/ecmascript" xlink:href="scripts/maze.es"/>
     <script type="text/ecmascript" xlink:href="scripts/hexmaze.es"/>
     <script type="text/ecmascript">
-      var board = new Array();
-      board[0] = new Array(0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0 );
-      board[1] = new Array(1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 );
-      board[2] = new Array(1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1 );
-      board[3] = new Array(1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 );
-      board[4] = new Array(0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0 );
-      board[5] = new Array(1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 );
-      board[6] = new Array(1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1 );
-      board[7] = new Array(1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 );
-      board[8] = new Array(0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0 );
-      board[9] = new Array(1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 );
-      board[10] = new Array(1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1 );
-      board[11] = new Array(1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1 );
-      board[12] = new Array(0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0 );
-      board[13] = new Array(0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0 );
-      board[14] = new Array(0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0 );
-      board[15] = new Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
-      board[16] = new Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
-    </script>
-    <script type="text/ecmascript">
       function push( evt )
-       {
-        var btn = evt.getCurrentTarget();
-	btn.setAttributeNS( null, "opacity", "0.5" );
-       }
+      {
+          var btn = evt.currentTarget;
+          btn.setAttributeNS( null, "opacity", "0.5" );
+      }
       function release( evt )
-       {
-        var btn = evt.getCurrentTarget();
-	if("" != btn.getAttributeNS( null, "opacity" ))
-           btn.removeAttributeNS( null, "opacity" );
-       }
+      {
+          var btn = evt.currentTarget;
+          var opval = btn.getAttributeNS( null, "opacity" );
+          if("" != opval &amp;&amp; 1.0 != opval)
+              btn.setAttributeNS( null, "opacity", '1.0' );
+      }
     </script>
+
+    <maze:board start="11,-4" end="11,22" tile="10,10">
+      01110001110
+      11011011011
+      10001110001
+      11011011011
+      01110001110
+      11011011011
+      10001110001
+      11011011011
+      01110001110
+      11011011011
+      10001110001
+      11011011011
+      01110001110
+      00011011000
+      00001110000
+      00000000000
+      00000000000
+    </maze:board>
 
   </defs>
   <svg x="250" y="0" width="130" height="210"
@@ -161,12 +168,10 @@ __DATA__
 	#sprite { stroke: grey; stroke-width:0.2px; fill: orange; }
 	.crumbs { fill:none; stroke-width:1px; stroke-dasharray:5px,3px; }
 	.mazebg { fill:#ffc; stroke:none; }
-	text { font-family: sans-serif; }
+	text { font-family: sans-serif; font-size: 10px; }
 	.sign text {  fill:#fff;text-anchor:middle; font-weight:bold; }
 	.exit rect {  fill:red; stroke:none; }
 	.entry rect {  fill:green; stroke:none; }
-	#solvedmsg { text-anchor:middle; pointer-events:none; font-size:80px; fill:red;
-                   }
       </style>
       <circle id="savemark" r="3" fill="#6f6" stroke="none"/>
       <path id="sprite" d="M0,0 Q5,5 0,10 Q5,5 10,10 Q5,5 10,0 Q5,5 0,0"/>
@@ -270,10 +275,9 @@ __DATA__
       <rect x="-16" y="-8" width="32" height="16" rx="3" ry="3"/>
       <text x="0" y="4">Exit</text>
     </g>
-    <text id="solvedmsg" x="55" y="120" opacity="0">Solved!</text>
   </svg>
   <g id="control_panel" transform="translate(0,0)">
-    <rect x="0" y="0" width="250" height="210"
+    <rect x="0" y="0" width="250" height="365"
           class="panel"/>
 
     <g onclick="restart()" transform="translate(20,20)" class="button"
@@ -297,7 +301,7 @@ __DATA__
     <g transform="translate(20,65)">
       <rect x="-2" y="-2" rx="25" ry="25" width="68" height="68"
           fill="none" stroke-width="0.5" stroke="black"/>
-      <text x="34" y="-5" class="ctrllabel">Move Maze</text>
+      <text x="34" y="-5" class="ctrllabel">Move View</text>
 
       <g onclick="maze_up()" transform="translate(22,0)" class="button"
 	 onmousedown="push(evt)" onmouseup="release(evt)" onmouseout="release(evt)">
@@ -337,9 +341,10 @@ __DATA__
       <text x="0" y="70">The mouse must remain over the</text>
       <text x="0" y="90">maze for the keys to work.</text>
       <text x="0" y="120">Use arrow buttons to shift the maze</text>
-      <text x="0" y="140">Center button restores position</text>
+      <text x="0" y="140">Center button centers view on sprite</text>
       <text x="0" y="160">Save button saves current position</text>
       <text x="0" y="180">Back button restores last position</text>
     </g>
   </g>
+  <text id="solvedmsg" x="180" y="217.5" visibility="hidden">Solved!</text>
 </svg>

@@ -8,13 +8,14 @@ var shifted = false;
 
 var game;
 var sprite;
+var extents;
 
 /*
  * The MazeGame object will maintain the current state of the game and
  * update the display.
  */
 
-function MazeGame( start, end, board )
+function MazeGame( start, end, board, extents )
 {
     this.start = start;
     this.end = end;
@@ -22,16 +23,41 @@ function MazeGame( start, end, board )
 
     this.maze = document.getElementById( "maze" );
     this.origin = this.maze.getAttributeNS( null, "viewBox" );
+
+    // The displayable area of the screen
+    this.viewport = {
+        width: extents.width - this.maze.getAttributeNS( null, "x" ),
+        height: extents.height
+    };
+    // The full extent of the maze.
+    this.extents = {
+        width: this.maze.getAttributeNS( null, "width" ) - 0,
+	heigth: this.maze.getAttributeNS( null, "height" ) - 0
+    };
 }
 
 MazeGame.prototype.isFinished = function( pt )
 {
-    return pt.x == this.end.x && pt.y == this.end.y;
+    return this.end.equals( pt );
 }
 
 MazeGame.prototype.reset_origin = function()
 {
     this.maze.setAttributeNS( null, "viewBox", this.origin );
+}
+
+MazeGame.prototype.center_view = function()
+{
+    var vctr = new Point( this.viewport.width/2, this.viewport.height/2 );
+    var curr = sprite.calc_crumb_position();
+    var offset = new Point( curr.x-vctr.x, curr.y-vctr.y );
+
+    this.maze.setAttributeNS(
+       null, "viewBox",
+       [ offset.x, offset.y,
+         this.viewport.width, this.viewport.height
+       ].join( " " )
+    );
 }
 
 MazeGame.prototype.maze_move = function( index, offset )
@@ -43,46 +69,62 @@ MazeGame.prototype.maze_move = function( index, offset )
 
 MazeGame.prototype.up_blocked = function( pt )
 {
-    return (pt.y == 0 || this.board[pt.y-1][pt.x]);
+    return (pt.y == 0 || this.board[pt.y-1][pt.x]-0);
 }
 
 MazeGame.prototype.left_blocked = function( pt )
 {
-    return pt.x < 0 || this.board[pt.y][pt.x-1] > 0;
+    return pt.x < 0 || this.board[pt.y][pt.x-1]-0 > 0;
 }
 
 MazeGame.prototype.right_blocked = function( pt )
 {
     return pt.x+1 == this.board[pt.y].length
-        || this.board[pt.y][pt.x+1] > 0;
+        || this.board[pt.y][pt.x+1]-0 > 0;
 }
 
 MazeGame.prototype.down_blocked = function( pt )
 {
-    return pt.y+1 == this.board.length || this.board[pt.y+1][pt.x];
+    return pt.y+1 == this.board.length || this.board[pt.y+1][pt.x]-0;
 }
 
 /***** Standalone functions *******/
 
-function initialize( board, start, end, tile )
+Keys = {
+   SHIFT: 16,
+   DOWN: 40,
+   UP: 38,
+   LEFT: 37,
+   RIGHT: 39
+};
+
+function initialize()
 {
-    game = new MazeGame( start, end, board );
-    sprite = new Sprite( start, tile, game );
-    
+    var mazedesc = loadBoard();
+    extents = getDisplaySize();
+
+    game = new MazeGame( mazedesc.start, mazedesc.end, mazedesc.board, extents );
+    sprite = new Sprite( mazedesc.start, mazedesc.tile, game );
     sprite.reset();
 
-    remove_msg();
-}
+    // Center the message on the screen.
+    var msg = document.getElementById( "solvedmsg" );
+    msg.setAttributeNS( null, "x", extents.width/2 );
+    msg.setAttributeNS( null, "y", extents.height/2 );
 
-function create_crumb_point( pt )
-{
-    var pos = sprite.calc_crumb_position( pt );
-    return pos.x +  "," + pos.y;
+    try {
+        window.addEventListener("keydown", move_sprite, true);
+        window.addEventListener("keyup", unshift, true);
+    } catch (e) {
+        // MSIE6 compatibility
+        document.attachEvent("onkeydown", move_sprite);
+        document.attachEvent("onkeyup", unshift);
+    }
 }
 
 function unshift(evt)
 {
-    if(16 == evt.keyCode)
+    if(Keys.SHIFT == evt.keyCode)
     {
         shifted = false;
     }
@@ -97,7 +139,7 @@ function finished_msg()
     }
     else
     {
-        msg.setAttributeNS( null, "opacity", "1.0" );
+        msg.setAttributeNS( null, "visibility", "visible" );
         setTimeout( "remove_msg()", 2000 );
     }
 }
@@ -107,9 +149,15 @@ function remove_msg()
     var msg = document.getElementById( "solvedmsg" );
     if(null != msg)
     {
-        msg.setAttributeNS( null, "opacity", "0.0" );
+        msg.setAttributeNS( null, "visibility", "hidden" );
     }
 }
+
+function  setText(elem, str)
+ {
+   var text = document.createTextNode( str );
+   elem.replaceChild( text, elem.firstChild );
+ }
 
 function restart()
 {
@@ -128,27 +176,27 @@ function make_visible( name )
 
 function maze_up()
 {
-    game.maze_move( 1, 25 );
+    game.maze_move( 1, -25 );
 }
 
 function maze_down()
 {
-    game.maze_move( 1, -25 );
+    game.maze_move( 1, 25 );
 }
 
 function maze_left()
 {
-    game.maze_move( 0, 25 );
+    game.maze_move( 0, -25 );
 }
 
 function maze_right()
 {
-    game.maze_move( 0, -25 );
+    game.maze_move( 0, 25 );
 }
 
 function maze_reset()
 {
-    game.reset_origin();
+    game.center_view();
 }
 
 function save_position()
@@ -159,4 +207,88 @@ function save_position()
 function restore_position()
 {
     sprite.restore();
+}
+
+function getDisplaySize()
+{
+    var extents = null;
+    var doc = document.documentElement;
+    try
+    {
+        var view = doc.viewport;
+
+        extents = {
+            width: view.width,
+            height: view.height
+        };
+    }
+    catch(e)
+    {
+        extents = {
+            width: window.innerWidth,
+            height: window.innerHeight
+        };
+    }
+
+    var w = doc.getAttributeNS( null, "width" )-0;
+    var h = doc.getAttributeNS( null, "height" )-0;
+    if(w < extents.width)
+    {
+        extents.width = w;
+    }
+    if(h < extents.height)
+    {
+        extents.height = h;
+    }
+
+    return extents;
+}
+
+function loadBoard()
+{
+    var elem = document.getElementsByTagNameNS( "http://www.anomaly.org/2005/maze",
+        "board" ).item( 0 );
+
+    var content = elem.childNodes.item( 0 ).nodeValue;
+
+    // if the content is broken up for some reason.
+    for(var i = 1;i < elem.childNodes.length;++i)
+    {
+        content = content + elem.childNodes.item( i ).nodeValue;
+    }
+
+    var lines = content.split( /\s+/ );
+    var retval = {
+        board: [],
+	start: new Point(),
+	end: new Point(),
+	tile: new Point()
+    };
+
+    for(var i=0, j=0;i < lines.length;++i)
+    {
+        lines[i].replace( /\s+/g, '' );
+	if(lines[i].length)
+	{
+	    retval.board[j++] = lines[i].split( '' );
+	}
+    }
+    
+    retval.start = pointFromAttribute( elem, "start" );
+    retval.end = pointFromAttribute( elem, "end" );
+    retval.tile = pointFromAttribute( elem, "tile" );
+    
+    return retval;
+}
+
+
+function pointFromAttribute( elem, attr )
+{
+    var value = elem.getAttributeNS( null, attr );
+    if(null == value)
+    {
+        return null;
+    }
+
+    return new Point( value );
 }

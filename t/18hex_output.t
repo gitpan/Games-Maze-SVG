@@ -159,9 +159,12 @@ __DATA__
 <svg width="190" height="290"
      xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>An SVG Maze</title>
+  <desc>This maze was generated using the Games::Maze::SVG Perl
+    module.</desc>
   <metadata>
     <!--
-        Copyright 2004-2005, G. Wade Johnson
+        Copyright 2004-2006, G. Wade Johnson
 	Some rights reserved.
     -->
     <rdf:RDF xmlns="http://web.resource.org/cc/"
@@ -169,7 +172,7 @@ __DATA__
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
     <Work rdf:about="">
        <dc:title>SVG Maze</dc:title>
-       <dc:date>2005</dc:date>
+       <dc:date>2006</dc:date>
        <dc:description>An SVG-based Game</dc:description>
        <dc:creator><Agent>
 	  <dc:title>G. Wade Johnson</dc:title>
@@ -201,13 +204,11 @@ __DATA__
 	polygon { stroke: black; fill: grey; }
 	#sprite { stroke: grey; stroke-width:0.2px; fill: orange; }
 	.crumbs { fill:none; stroke-width:1px; stroke-dasharray:5px,3px; }
-	.mazebg { fill:#ffc; stroke:none; }
-	text { font-family: sans-serif; }
+	.mazebg { fill:#fff; stroke:none; }
+	text { font-family: sans-serif; font-size: 10px; }
 	.sign text {  fill:#fff;text-anchor:middle; font-weight:bold; }
 	.exit rect {  fill:red; stroke:none; }
 	.entry rect {  fill:green; stroke:none; }
-	#solvedmsg { text-anchor:middle; pointer-events:none; font-size:80px; fill:red;
-                   }
       </style>
       <circle id="savemark" r="3" fill="#6f6" stroke="none"/>
       <path id="sprite" d="M0,0 Q5,5 0,10 Q5,5 10,10 Q5,5 10,0 Q5,5 0,0"/>
@@ -353,6 +354,5 @@ __DATA__
       <rect x="-16" y="-8" width="32" height="16" rx="3" ry="3"/>
       <text x="0" y="4">Exit</text>
     </g>
-    <text id="solvedmsg" x="85" y="160" opacity="0">Solved!</text>
   </svg>
 </svg>

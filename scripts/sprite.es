@@ -20,34 +20,46 @@ function Sprite( start, tile, game )
 
 Sprite.prototype.reset = function()
 {
-    this.curr     = {x:this.start.x, y:this.start.y};
-    this.crumbpts = create_crumb_point( this.start );
+    this.curr     = this.start.clone();
+    this.curposn
+        = new Point( this.curr.x*this.tile.x, this.curr.y*this.tile.y );
+
+    this.crumbpts = this.create_crumb_point();
     this.crumb.setAttributeNS( null, "points", this.crumbpts );
     this.saves.clear();
 }
 
+Sprite.prototype.create_crumb_point = function()
+{
+    var pos = this.calc_crumb_position();
+
+    return "" + pos;
+}
+
 Sprite.prototype.show = function()
 {
-    this.elem.setAttributeNS( null, "x", (this.curr.x*this.tile.x) );
-    this.elem.setAttributeNS( null, "y", (this.curr.y*this.tile.y) );
+    positionElement( this.elem, this.curposn );
     this.elem.setAttributeNS( null, "visibility", "visible" );
 
-    this.crumbpts += " " + create_crumb_point( this.curr );
+    this.crumbpts += " " + this.create_crumb_point();
     this.crumb.setAttributeNS( null, "points", this.crumbpts );
 }
 
-Sprite.prototype.calc_crumb_position = function( pt )
+Sprite.prototype.calc_crumb_position = function()
 {
-    return { x: pt.x*this.tile.x+this.tile.x/2,
-             y: pt.y*this.tile.y+this.tile.y/2
-           };
+    var pos = this.curposn.clone();
+
+    pos.x += this.tile.x/2;
+    pos.y += this.tile.y/2;
+
+    return pos;
 }
 
 Sprite.prototype.save = function()
 {
-    var pos = this.calc_crumb_position( this.curr );
+    var pos = this.calc_crumb_position();
 
-    this.saves.save( this.curr, pos, this.crumbpts );
+    this.saves.save( this.curr, this.curposn, pos, this.crumbpts );
 }
 
 Sprite.prototype.restore = function()
@@ -55,11 +67,36 @@ Sprite.prototype.restore = function()
     if(!this.saves.empty())
     {
         var saved = this.saves.last();
-        this.curr.x = saved.x;
-        this.curr.y = saved.y;
+	this.curr    = saved.pt;
+	this.curposn = saved.curposn;
         this.crumbpts = saved.crumb;
         this.show();
     }
+}
+
+
+Sprite.prototype.down = function()
+{
+    this.curr.y++;
+    this.curposn.y += this.tile.y;
+}
+
+Sprite.prototype.up = function()
+{
+    this.curr.y--;
+    this.curposn.y -= this.tile.y;
+}
+
+Sprite.prototype.left = function()
+{
+    this.curr.x--;
+    this.curposn.x -= this.tile.x;
+}
+
+Sprite.prototype.right = function()
+{
+    this.curr.x++;
+    this.curposn.x += this.tile.x;
 }
 
 Sprite.prototype.move_down = function()
@@ -68,7 +105,7 @@ Sprite.prototype.move_down = function()
     {
          return false;
     }
-    this.curr.y++;
+    this.down();
     return true;
 }
 
@@ -78,7 +115,7 @@ Sprite.prototype.move_up = function()
     {
         return false;
     }
-    this.curr.y--;
+    this.up();
     return true;
 }
 
@@ -88,7 +125,7 @@ Sprite.prototype.move_left = function()
     {
         return false;
     }
-    this.curr.x--;
+    this.left();
     return true;
 }
 
@@ -98,7 +135,7 @@ Sprite.prototype.move_right = function()
     {
         return false;
     }
-    this.curr.x++;
+    this.right();
     return true;
 }
 
@@ -114,17 +151,20 @@ function Snapshots( maze )
     this.maze = maze;
 }
 
-Snapshots.prototype.save = function( pt, pos, crumbpts )
+Snapshots.prototype.save = function( pt, curposn, pos, crumbpts )
 {
     var mark = document.createElementNS( svgns, 'use' );
 
-    mark.setAttributeNS( null, 'x', pos.x );
-    mark.setAttributeNS( null, 'y', pos.y );
+    positionElement( mark, pos );
     mark.setAttributeNS( xlinkns, 'href', '#savemark' );
 
     this.maze.appendChild( mark );
 
-    this.stack.push( { x: pt.x, y: pt.y, crumb: crumbpts, marker: mark } );
+    this.stack.push(
+      { pt: pt.clone(), curposn: curposn.clone(),
+        crumb: crumbpts, marker: mark
+      }
+    );
 }
 
 Snapshots.prototype.last = function()
