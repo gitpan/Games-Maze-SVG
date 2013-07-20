@@ -21,4 +21,4 @@ requires:
   Carp: 0
   Games::Maze: 1.02
   Test::More: 0
-version: 0.76
+version: 0.77
